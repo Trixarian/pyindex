@@ -1,0 +1,130 @@
+#!/usr/bin/python
+################################################
+# Python IRC Indexer version 0.2
+# By Brenton Edgar Scott
+# Contributions by Sinjin Swanepoel
+# Released under the GNU General Public License
+################################################
+import socket
+import sys
+import time
+import random
+
+DEBUG = False
+# 0 = Network Name
+# 1 = Number of servers
+# 2 = Number of channels
+# 3 = Number of users
+datalist = ["Unknown", "0", "0", "0"]
+
+# Function to read the conf with comment and empty line support
+def readconf(target):
+	infile = open("pyindex.conf")
+	while infile:
+		line = infile.readline()
+		if line != "" and "=" in line:
+			if target in line:
+				line2 = line.split(" = ")
+				returnline = ''.join(line2[1])
+				break
+		if line == "":
+			break
+	else:
+		infile.close()
+
+	if returnline:
+		return eval(returnline)
+
+def write_data(filename, sdata):
+	file = open("./networks/%s" % filename, "a")
+	file.write(sdata)
+	file.close()
+
+def irc_send(msg):
+	irc.send("%s\r\n" % msg)
+
+def irc_quit():
+	global running, irc
+	irc_send("QUIT :Leaving %s with %s users in %s channels" % (datalist[0], datalist[3], datalist[2]))
+	time.sleep(1)
+	running = False
+
+def index_done():
+	index_timestamp = time.strftime("%d-%m-%Y %H:%M:%S")
+	write_data(datalist[0], "[%s]\nServers:%s\nUsers:%s\nChannels:%s\n" % (index_timestamp, datalist[1], datalist[3], datalist[2]))
+	irc_quit()
+
+# I hate those : in lines >.<
+def irc_clean(msg):
+	msg = msg.rstrip()
+	msg = msg.replace(":","")
+        msg = msg.split()
+	return msg
+
+def irc_parser(msg):
+	sync_done = False
+
+	# Keeps us online
+	if msg[0] == "PING":
+		irc_send("PONG %s" % msg[1])
+
+	# Name of the network
+	if msg[1] == "001":
+		datalist[0] = msg[6]
+
+	# Number of servers the network has
+	if msg[1] == "251":
+		datalist[1] = msg[11]
+
+	# Number of channels on the network
+	if msg[1] == "254":
+		datalist[2] = int(msg[3])
+
+	# Current number of users on the network
+	if msg[1] == "266":
+		# Ratbox based IRCd support
+		if msg[5] == "Current":
+			datalist[3] = msg[3]
+		else:
+			datalist[3] = msg[6]
+		sync_done = True
+
+	if sync_done:
+		# We've collected all we can. Now let's write our data and exit ;)
+		index_done()
+
+################
+# Main Program #
+################
+running = True
+
+if (len(sys.argv) > 1):
+	IRC_SERVER = sys.argv[1]
+	IRC_PORT = int(6667)
+	IRC_NICK = readconf("IRC_NICK")
+	NICK_NUM = random.randint(1, 999)
+	IRC_NICK = "%s%d" % (IRC_NICK, NICK_NUM)
+	IRC_IDENT = readconf("IRC_IDENT")
+	IRC_REALNAME = readconf("IRC_REALNAME")
+	irc_buffer = ""
+
+	irc=socket.socket()
+	irc.connect((IRC_SERVER, IRC_PORT))
+	irc_send("NICK %s" % IRC_NICK)
+	irc_send("USER %s %s 0 :%s" % (IRC_IDENT, IRC_SERVER, IRC_REALNAME))
+
+	while running:
+		irc_buffer = irc_buffer + irc.recv(1024)
+		if DEBUG:
+			print irc_buffer.replace(":","")
+		irc_temp = irc_buffer.split("\n")
+		irc_buffer = irc_temp.pop()
+
+		for irc_line in irc_temp:
+			irc_parser(irc_clean(irc_line))
+
+	else:
+		irc.close()
+
+else:
+	print "Error: Please provide a server to index!"
