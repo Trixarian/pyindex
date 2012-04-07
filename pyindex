@@ -44,8 +44,8 @@ def irc_quit():
 	running = False
 
 def index_done():
-	ts = time.strftime("%d%m%Y%H%M%S")
-	write_data(network, "%s:Servers:%s\n%s:Users:%s\n%s:Channels:%s\n" % (ts, servers, ts, users, ts,channels))
+	ts = time.time()
+	write_data(network, "%s:S:%s\n%s:U:%s\n%s:C:%s\n" % (ts, servers, ts, users, ts, channels))
 	irc_quit()
 
 # I hate those : in lines >.<
