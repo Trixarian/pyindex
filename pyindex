@@ -11,7 +11,6 @@ import random
 import os
 
 DEBUG = False
-check = "yes"
 
 # Function to read the conf with comment and empty line support
 def readconf(target):
@@ -72,10 +71,8 @@ def irc_parser(msg):
 		except: network = "Unknown"
 
 	if msg[1] == "004":
-		if check == "yes":
-			check = "no"
-			try: ircd = msg[4]
-			except: ircd = "Unknown"
+		try: ircd = msg[4]
+		except: ircd = "Unknown"
 
 	# Number of servers the network has
 	if msg[1] == "251":
