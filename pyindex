@@ -8,8 +8,10 @@ import socket
 import sys
 import time
 import random
+import os
 
 DEBUG = False
+check = "yes"
 
 # Function to read the conf with comment and empty line support
 def readconf(target):
@@ -44,7 +46,8 @@ def irc_quit():
 	running = False
 
 def index_done():
-	ts = time.time()
+	ts = time.strftime("%d%m%Y%H%M")
+	if not os.path.isfile(network): write_data(network, "N:%s\nI:%s\n" % (network, ircd))
 	write_data(network, "%s:S:%s\n%s:U:%s\n%s:C:%s\n" % (ts, servers, ts, users, ts, channels))
 	irc_quit()
 
@@ -56,7 +59,7 @@ def irc_clean(msg):
 	return msg
 
 def irc_parser(msg):
-	global users, channels, servers, network
+	global users, channels, servers, network, ircd, check
 	sync_done = False
 
 	# Keeps us online
@@ -67,6 +70,12 @@ def irc_parser(msg):
 	if msg[1] == "001":
 		try: network = msg[6]
 		except: network = "Unknown"
+
+	if msg[1] == "004":
+		if check == "yes":
+			check = "no"
+			try: ircd = msg[4]
+			except: ircd = "Unknown"
 
 	# Number of servers the network has
 	if msg[1] == "251":
