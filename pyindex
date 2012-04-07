@@ -1,8 +1,7 @@
 #!/usr/bin/python
 ################################################
-# Python IRC Indexer version 0.2
+# Python IRC Indexer version 0.3
 # By Brenton Edgar Scott
-# Contributions by Sinjin Swanepoel
 # Released under the GNU General Public License
 ################################################
 import socket
@@ -11,11 +10,6 @@ import time
 import random
 
 DEBUG = False
-# 0 = Network Name
-# 1 = Number of servers
-# 2 = Number of channels
-# 3 = Number of users
-datalist = ["Unknown", "0", "0", "0"]
 
 # Function to read the conf with comment and empty line support
 def readconf(target):
@@ -45,13 +39,13 @@ def irc_send(msg):
 
 def irc_quit():
 	global running, irc
-	irc_send("QUIT :Leaving %s with %s users in %s channels" % (datalist[0], datalist[3], datalist[2]))
+	irc_send("QUIT :Leaving %s with %s users in %s channels" % (network, users, channels))
 	time.sleep(1)
 	running = False
 
 def index_done():
-	index_timestamp = time.strftime("%d-%m-%Y %H:%M:%S")
-	write_data(datalist[0], "[%s]\nServers:%s\nUsers:%s\nChannels:%s\n" % (index_timestamp, datalist[1], datalist[3], datalist[2]))
+	ts = time.strftime("%d%m%Y%H%M%S")
+	write_data(network, "%s:Servers:%s\n%s:Users:%s\n%s:Channels:%s\n" % (ts, servers, ts, users, ts,channels))
 	irc_quit()
 
 # I hate those : in lines >.<
@@ -62,6 +56,7 @@ def irc_clean(msg):
 	return msg
 
 def irc_parser(msg):
+	global users, channels, servers, network
 	sync_done = False
 
 	# Keeps us online
@@ -70,23 +65,28 @@ def irc_parser(msg):
 
 	# Name of the network
 	if msg[1] == "001":
-		datalist[0] = msg[6]
+		try: network = msg[6]
+		except: network = "Unknown"
 
 	# Number of servers the network has
 	if msg[1] == "251":
-		datalist[1] = msg[11]
+		try: servers = int(msg[11])
+		except: servers = 0
 
 	# Number of channels on the network
 	if msg[1] == "254":
-		datalist[2] = int(msg[3])
+		try: channels = int(msg[3])
+		except: channels = 0
 
 	# Current number of users on the network
 	if msg[1] == "266":
 		# Ratbox based IRCd support
 		if msg[5] == "Current":
-			datalist[3] = msg[3]
+			try: users = int(msg[3])
+			except: users = 0
 		else:
-			datalist[3] = msg[6]
+			try: users = int(msg[6])
+			except: users = 0
 		sync_done = True
 
 	if sync_done:
@@ -101,11 +101,11 @@ running = True
 if (len(sys.argv) > 1):
 	IRC_SERVER = sys.argv[1]
 	IRC_PORT = int(6667)
-	IRC_NICK = readconf("IRC_NICK")
+	IRC_NICK = readconf("NICK")
 	NICK_NUM = random.randint(1, 999)
 	IRC_NICK = "%s%d" % (IRC_NICK, NICK_NUM)
-	IRC_IDENT = readconf("IRC_IDENT")
-	IRC_REALNAME = readconf("IRC_REALNAME")
+	IRC_IDENT = readconf("IDENT")
+	IRC_REALNAME = readconf("REALNAME")
 	irc_buffer = ""
 
 	irc=socket.socket()
