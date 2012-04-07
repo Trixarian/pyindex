@@ -26,7 +26,7 @@ def readconf(target):
 	if returnline: return eval(returnline)
 
 def write_data(filename, sdata):
-	file = open("./networks/%s" % filename, "a")
+	file = open("./networks/%s" % filename.lower(), "a")
 	file.write(sdata)
 	file.close()
 
@@ -40,12 +40,14 @@ def irc_quit():
 
 def index_done():
 	ts = int(time.time())
-	if not os.path.isfile("./networks/%s" % network): write_data(network, "NN:%s\nIT:%s\n" % (network, ircd))
+	if not os.path.isfile("./networks/%s" % network.lower()): 
+		write_data(network, "NN:%s\nIT:%s\n" % (network, ircd))
 	write_data(network, "%d:LS:%s\n%d:TS:%s\n%d:TC:%s\n%d:CU:%s\n%d:TU:%s\n" % (ts, server, ts, servers, ts, channels, ts, current_users, ts, total_users))
 	irc_quit()
 
 # I hate those : in lines >.<
-def irc_clean(msg):	return msg.rstrip().replace(":","").split()
+def irc_clean(msg):	
+	return msg.rstrip().replace(":","").split()
 
 def irc_parser(msg):
 	global server, network, ircd, servers, channels, current_users, total_users
