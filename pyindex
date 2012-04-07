@@ -34,30 +34,34 @@ def irc_send(msg): irc.send("%s\r\n" % msg)
 
 def irc_quit():
 	global running, irc
-	irc_send("QUIT :Leaving %s with %s users in %s channels" % (network, users, channels))
+	irc_send("QUIT :Leaving %s with %s users in %s channels" % (network, current_users, channels))
 	time.sleep(1)
 	running = False
 
 def index_done():
-	ts = time.strftime("%d%m%Y%H%M")
-	if not os.path.isfile("./networks/%s" % network): write_data(network, "N:%s\nI:%s\n" % (network, ircd))
-	write_data(network, "%s:S:%s\n%s:U:%s\n%s:C:%s\n" % (ts, servers, ts, users, ts, channels))
+	ts = int(time.time())
+	if not os.path.isfile("./networks/%s" % network): write_data(network, "LS:%s\nNN:%s\nIT:%s\n" % (server, network, ircd))
+	write_data(network, "%d:TS:%s\n%d:TC:%s\n%d:CU:%s\n%d:TU:%s\n" % (ts, servers, ts, channels, ts, current_users, ts, total_users))
 	irc_quit()
 
 # I hate those : in lines >.<
 def irc_clean(msg):	return msg.rstrip().replace(":","").split()
 
 def irc_parser(msg):
-	global users, channels, servers, network, ircd, check
+	global server, network, ircd, servers, channels, current_users, total_users
 	sync_done = False
 
 	# Keeps us online
 	if msg[0] == "PING": irc_send("PONG %s" % msg[1])
 
-	# Name of the network
+	# Server Address and Network Name
 	if msg[1] == "001":
-		try: network = msg[6]
-		except: network = "Unknown"
+		try: 
+			server = msg[0]
+			network = msg[6]
+		except:
+			server = "Unknown"
+			network = "Unknown"
 
 	if msg[1] == "004":
 		try: ircd = msg[4]
@@ -73,15 +77,23 @@ def irc_parser(msg):
 		try: channels = int(msg[3])
 		except: channels = 0
 
-	# Current number of users on the network
+	# Current & total number of users on the network - We'll trust that the servers aren't lying...
 	if msg[1] == "266":
 		# Ratbox based IRCd support
 		if msg[5] == "Current":
-			try: users = int(msg[3])
-			except: users = 0
+			try: 
+				current_users = int(msg[3])
+				total_users = int(msg[4])
+			except: 
+				current_users = 0
+				total_users = 0
 		else:
-			try: users = int(msg[6])
-			except: users = 0
+			try: 
+				current_users = int(msg[6])
+				total_users = int(msg[8])
+			except: 
+				current_users = 0
+				total_users = 0
 		sync_done = True
 
 	if sync_done:
