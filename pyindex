@@ -40,8 +40,8 @@ def irc_quit():
 
 def index_done():
 	ts = int(time.time())
-	if not os.path.isfile("./networks/%s" % network): write_data(network, "LS:%s\nNN:%s\nIT:%s\n" % (server, network, ircd))
-	write_data(network, "%d:TS:%s\n%d:TC:%s\n%d:CU:%s\n%d:TU:%s\n" % (ts, servers, ts, channels, ts, current_users, ts, total_users))
+	if not os.path.isfile("./networks/%s" % network): write_data(network, "NN:%s\nIT:%s\n" % (network, ircd))
+	write_data(network, "%d:LS:%s\n%d:TS:%s\n%d:TC:%s\n%d:CU:%s\n%d:TU:%s\n" % (ts, server, ts, servers, ts, channels, ts, current_users, ts, total_users))
 	irc_quit()
 
 # I hate those : in lines >.<
