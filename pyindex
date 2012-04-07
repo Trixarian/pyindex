@@ -10,8 +10,6 @@ import time
 import random
 import os
 
-DEBUG = False
-
 # Function to read the conf with comment and empty line support
 def readconf(target):
 	infile = open("pyindex.conf")
@@ -22,21 +20,17 @@ def readconf(target):
 				line2 = line.split(" = ")
 				returnline = ''.join(line2[1])
 				break
-		if line == "":
-			break
-	else:
-		infile.close()
+		if line == "": break
+	else: infile.close()
 
-	if returnline:
-		return eval(returnline)
+	if returnline: return eval(returnline)
 
 def write_data(filename, sdata):
 	file = open("./networks/%s" % filename, "a")
 	file.write(sdata)
 	file.close()
 
-def irc_send(msg):
-	irc.send("%s\r\n" % msg)
+def irc_send(msg): irc.send("%s\r\n" % msg)
 
 def irc_quit():
 	global running, irc
@@ -46,24 +40,19 @@ def irc_quit():
 
 def index_done():
 	ts = time.strftime("%d%m%Y%H%M")
-	if not os.path.isfile(network): write_data(network, "N:%s\nI:%s\n" % (network, ircd))
+	if not os.path.isfile("./networks/%s" % network): write_data(network, "N:%s\nI:%s\n" % (network, ircd))
 	write_data(network, "%s:S:%s\n%s:U:%s\n%s:C:%s\n" % (ts, servers, ts, users, ts, channels))
 	irc_quit()
 
 # I hate those : in lines >.<
-def irc_clean(msg):
-	msg = msg.rstrip()
-	msg = msg.replace(":","")
-        msg = msg.split()
-	return msg
+def irc_clean(msg):	return msg.rstrip().replace(":","").split()
 
 def irc_parser(msg):
 	global users, channels, servers, network, ircd, check
 	sync_done = False
 
 	# Keeps us online
-	if msg[0] == "PING":
-		irc_send("PONG %s" % msg[1])
+	if msg[0] == "PING": irc_send("PONG %s" % msg[1])
 
 	# Name of the network
 	if msg[1] == "001":
@@ -121,16 +110,11 @@ if (len(sys.argv) > 1):
 
 	while running:
 		irc_buffer = irc_buffer + irc.recv(1024)
-		if DEBUG:
-			print irc_buffer.replace(":","")
 		irc_temp = irc_buffer.split("\n")
 		irc_buffer = irc_temp.pop()
 
 		for irc_line in irc_temp:
 			irc_parser(irc_clean(irc_line))
 
-	else:
-		irc.close()
-
-else:
-	print "Error: Please provide a server to index!"
+	else: irc.close()
+else: print "Error: Please provide a server to index!"
