@@ -1,1 +1,4 @@
 * Make it output a graph based on prior and currently collected data
+* Maybe add in /MOTD, /RULES and /LIST dumpers for fun ;)
+* Make it detect changes to the Network Name and IRCd type and make it update accordingly
+* Call Bertrum a bitch atleast once more...
