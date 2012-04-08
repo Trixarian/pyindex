@@ -21,11 +21,11 @@ It also uses time() to generate epoch based timestamps.
 Generally it's split into either Timestamp:Identifier:Data or Identifier:Data
 depending on if a timestamp is required for it or not.
 
-Identifier key:
-NN = The Network's Name
-IT = IRCd Type the Network is using
-LS = Last Server the bot connected to
-TS = Total Servers in the Network
-TC = Total Channels on the Network
-CU = Current Users on the Network
+Identifier key:  
+NN = The Network's Name  
+IT = IRCd Type the Network is using  
+LS = Last Server the bot connected to  
+TS = Total Servers in the Network  
+TC = Total Channels on the Network  
+CU = Current Users on the Network  
 TU = Total Users on the Network
